@@ -28,7 +28,8 @@
 // ======================================================
 
 #include <omnetpp.h>
-
+#include <numeric>
+#include <algorithm>
 #include "ScheduleClock.h"
 #include "ModuleInitBase.h"
 
@@ -137,6 +138,7 @@ class IClockServo: public cModuleInitBase
         void                Disable();
         bool                IsEnabled();
         SampleDecision_t    Sample( simtime_t offsetFromMaster, simtime_t Ingress );
+//        SampleDecision_t    VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain);
         virtual void        SetSyncInterval( simtime_t SyncInterval );
         virtual void        SetScaleFactor_ppb( int64_t ScaleFactor_ppb );
         virtual void        SetScaleFactorBounds( int64_t ScaleFactor_LowerBound_ppb, int64_t ScaleFactor_UpperBound_ppb );

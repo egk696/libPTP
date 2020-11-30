@@ -83,7 +83,8 @@ class cAppSync  : public cFilteredPortService
         void SynchronizeClock(  simtime_t SyncIngress,
                                 simtime_t originTimestamp,
                                 simtime_t SyncCorr,
-                                simtime_t FollowUpCorr );
+                                simtime_t FollowUpCorr,
+                                domainNumber_t domainNumber);
 
         // Init API
         void    ParseResourceParameters();

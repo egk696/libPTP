@@ -63,10 +63,10 @@ module PTP_Internal_Node_SO extends PTP_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly     = true;
+        PTP_Stack.SlaveOnly = true;
 
-        PTP_Stack.Priority1     = default(128);
-        PTP_Stack.ClockClass    = default("CLOCK_CLASS_SLAVE_ONLY");
+        PTP_Stack.Priority1 = default(128);
+        PTP_Stack.ClockClass = default("CLOCK_CLASS_SLAVE_ONLY");
         PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_UNKNOWN");
 }
 
@@ -74,9 +74,9 @@ module PTP_Internal_Node_M3 extends PTP_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly     = false;
+        PTP_Stack.SlaveOnly = false;
 
-        PTP_Stack.ClockClass    = default("CLOCK_CLASS_DEFAULT");
+        PTP_Stack.ClockClass = default("CLOCK_CLASS_DEFAULT");
         PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_1_S");
 }
 
@@ -84,9 +84,9 @@ module PTP_Internal_Node_M2 extends PTP_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly     = false;
+        PTP_Stack.SlaveOnly = false;
 
-        PTP_Stack.ClockClass    = default("CLOCK_CLASS_DEFAULT");
+        PTP_Stack.ClockClass = default("CLOCK_CLASS_DEFAULT");
         PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_1_US");
 }
 
@@ -94,8 +94,8 @@ module PTP_Internal_Node_M1 extends PTP_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly     = false;
+        PTP_Stack.SlaveOnly = false;
 
-        PTP_Stack.ClockClass    = default("CLOCK_CLASS_PRIMARY");
+        PTP_Stack.ClockClass = default("CLOCK_CLASS_PRIMARY");
         PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_25_NS");
 }
