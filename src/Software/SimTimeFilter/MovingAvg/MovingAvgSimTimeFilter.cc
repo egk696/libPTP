@@ -27,6 +27,8 @@
 #include "MovingAvgSimTimeFilter.h"
 
 #include <boost/circular_buffer.hpp>
+#include <numeric>
+
 
 // ======================================================
 // Definitions

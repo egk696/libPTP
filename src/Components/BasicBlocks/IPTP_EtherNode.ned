@@ -54,3 +54,20 @@ moduleinterface IPTP_EtherNode
 
         inout ethg[] @labels(EtherFrame-conn);
 }
+
+moduleinterface IPTP_Redundant_EtherNode
+{
+    parameters:
+
+        @display("i=PTP/Nodes/PTP_Nodes/Generic");
+
+        string PTP_ClockType;
+        bool PTP_TwoStepFlag;
+        string PTP_DelayMechanism;
+
+        string ClockServoType;
+
+    gates:
+
+        inout ethg[] @labels(EtherFrame-conn);
+}

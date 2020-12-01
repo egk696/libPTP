@@ -52,7 +52,7 @@ class cPortService : public cBasicService
         // Types
         enum class  PortServiceEvent
         {
-            TIMEOUT = BasicServiceEvent::NEXT_FREE_ENTRY,
+            TIMEOUT = (int)BasicServiceEvent::NEXT_FREE_ENTRY,
             NEXT_FREE_ENTRY,
         };
 

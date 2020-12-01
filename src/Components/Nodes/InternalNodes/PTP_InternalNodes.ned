@@ -31,6 +31,8 @@ package libptp.Components.Nodes.InternalNodes;
 // ======================================================
 
 import libptp.Components.BasicBlocks.PTP_BasicNode;
+import libptp.Components.BasicBlocks.PTP_RedundantNode;
+
 
 // ======================================================
 // Channel declarations
@@ -44,7 +46,7 @@ import libptp.Components.BasicBlocks.PTP_BasicNode;
 // Base class for internal nodes
 // ------------------------------------------------------
 
-module PTP_Internal_Node extends PTP_BasicNode
+module PTP_Internal_Node extends PTP_RedundantNode
 {
     parameters:
 

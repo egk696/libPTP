@@ -205,7 +205,9 @@ cAppSync::SynchronizeClock
 
     SampleDecision_t SampleDec;
 
-    SampleDec = pClockServo->Sample( offsetFromMaster, SyncIngress);
+    SampleDec = pClockServo->Sample( offsetFromMaster, SyncIngress );
+//    SampleDec = pClockServo->VotedSample( offsetFromMaster, SyncIngress, domainNumber);
+
 
     if( SampleDec.EnableJump )
     {
@@ -285,7 +287,7 @@ cAppSync::HandleSync( PTPv2_SyncFrame *pSync )
             SynchronizeClock(   pSync->getIngressTimeStamp().GetTime(),
                                 pSync->getOriginTimestamp().GetSimTime(),
                                 pSync->getCorrectionField().GetSimTime(),
-                                SIMTIME_ZERO, pSync->getDomainNumber() );
+                                SIMTIME_ZERO, (domainNumber_t) pSync->getDomainNumber() );
         }
     }
 }
@@ -335,7 +337,7 @@ cAppSync::HandleFollowUp( PTPv2_Follow_UpFrame *pFollowUp )
         SynchronizeClock(   SyncIngress,
                             pFollowUp->getPreciseOriginTimestamp().GetSimTime(),
                             SyncCorr,
-                            pFollowUp->getCorrectionField().GetSimTime(), pSync->getDomainNumber() );
+                            pFollowUp->getCorrectionField().GetSimTime(), (domainNumber_t) pFollowUp->getDomainNumber() );
     }
 }
 

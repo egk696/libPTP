@@ -475,50 +475,56 @@ IClockServo::Sample( simtime_t offsetFromMaster, simtime_t Ingress )
     return SampleDec;
 }
 
-//SampleDecision_t
-//IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
-//{
-//    static simtime_t offsetFromMasters[7];
-//    std::vector<double> usableOffsets = std::vector<double>();
-//    std::vector<double> filtered = std::vector<double>();
-//    double votedOffsetFromMasters = 0.0;
-//
-//    EV << "Inside VotedSample()" << endl;
-//
-//    //Copying usable offsets
-//    offsetFromMasters[domain] = offsetFromMaster;
-//    for(auto i=0; i<7; i++){
-//        if(offsetFromMasters[i] != 0)
-//            usableOffsets.push_back(offsetFromMasters[i].dbl());
-//    }
-//
-//    //Sorting
-//    std::sort(usableOffsets.begin(), usableOffsets.end());
-//
-//    // Actual FTA
-//    if(usableOffsets.size() == 1)
-//    {
-//        votedOffsetFromMasters = usableOffsets[0];
-//    }
-//    else if(usableOffsets.size() == 2)
-//    {
-//        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
-//    }
-//    else if(usableOffsets.size() == 3)
-//    {
-//        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 3;
-//    }
-//    else if(usableOffsets.size() >= 4)
-//    {
-//        usableOffsets.erase(usableOffsets.begin());
-//        usableOffsets.pop_back();
-//        auto n = usableOffsets.size();
-//        // check for even case
-//        if (n % 2 != 0)
-//            votedOffsetFromMasters = (double)usableOffsets[n / 2];
-//        else
-//            votedOffsetFromMasters = (double)(usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
-//    }
-//
-//    return this->Sample(SimTime(votedOffsetFromMasters), Ingress);
-//}
+SampleDecision_t
+IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
+{
+    static simtime_t offsetFromMasters[7];
+    std::vector<double> usableOffsets = std::vector<double>();
+    std::vector<double> filtered = std::vector<double>();
+    double votedOffsetFromMasters = 0.0;
+
+    #include <iostream>
+    std::cout << "Inside VotedSample()" << endl;
+
+    //Copying usable offsets
+    offsetFromMasters[domain] = offsetFromMaster;
+    std::cout << "Offsets:" << endl;
+    for(auto i=0; i<7; i++){
+        std::cout << "[ [" << i << "] =>" << offsetFromMasters[i] << "], ";
+        if(offsetFromMasters[i] != 0)
+            usableOffsets.push_back(offsetFromMasters[i].dbl());
+    }
+    std::cout << endl;
+
+    //Sorting
+    std::sort(usableOffsets.begin(), usableOffsets.end());
+
+    std::cout << usableOffsets.size()<< " usable offset(s)" << endl;
+    // Actual FTA
+    if(usableOffsets.size() == 1)
+    {
+        votedOffsetFromMasters = usableOffsets[0];
+    }
+    else if(usableOffsets.size() == 2)
+    {
+        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
+    }
+    else if(usableOffsets.size() == 3)
+    {
+        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 3;
+    }
+    else if(usableOffsets.size() >= 4)
+    {
+        usableOffsets.erase(usableOffsets.begin());
+        usableOffsets.pop_back();
+        auto n = usableOffsets.size();
+        // check for even case
+        if (n % 2 != 0)
+            votedOffsetFromMasters = (double)usableOffsets[n / 2];
+        else
+            votedOffsetFromMasters = (double)(usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
+    }
+    std::cout << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
+
+    return this->Sample(SimTime(votedOffsetFromMasters), Ingress);
+}
