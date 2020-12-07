@@ -205,8 +205,10 @@ cAppSync::SynchronizeClock
 
     SampleDecision_t SampleDec;
 
-    SampleDec = pClockServo->Sample( offsetFromMaster, SyncIngress );
-//    SampleDec = pClockServo->VotedSample( offsetFromMaster, SyncIngress, domainNumber);
+    if(!pApp->GetRedundantVotingMode())
+        SampleDec = pClockServo->Sample( offsetFromMaster, SyncIngress );
+    else
+        SampleDec = pClockServo->VotedSample( offsetFromMaster, SyncIngress, domainNumber);
 
 
     if( SampleDec.EnableJump )

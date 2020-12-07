@@ -509,11 +509,7 @@ IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainN
     {
         votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
     }
-    else if(usableOffsets.size() == 3)
-    {
-        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 3;
-    }
-    else if(usableOffsets.size() >= 4)
+    else if(usableOffsets.size() >= 3)
     {
         usableOffsets.erase(usableOffsets.begin());
         usableOffsets.pop_back();

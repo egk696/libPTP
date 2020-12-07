@@ -29,6 +29,7 @@ simple PTP_Stack
 
         // Simulation parameters
         bool        Enabled                         = default(true);
+        bool		RedundantVoting					= default(false);
         int         NodeNumber                      = default(-1);
         double      StartupInterval @unit(s)        = default( uniform(10ms, 100ms) );
 

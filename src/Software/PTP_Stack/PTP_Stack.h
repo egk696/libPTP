@@ -77,6 +77,7 @@ class PTP_Stack: public cModuleInitBase, public IClockEventSink
         // Configuration
         // ------------------------------------------------------------
         bool                            Enabled;
+        bool                            RedundantVoting;
         PTP_Profile_t                   PTP_Profile;
         PTP_ClockType_t                 PTP_ClockType;
         bool                            Active_E2E_TC;
@@ -215,7 +216,6 @@ class PTP_Stack: public cModuleInitBase, public IClockEventSink
         void    HandlePortStateDec( portStateDecision_t StateDecision );
 
     public:
-
         // ------------------------------------------------------------
         // Constructors/Destructor
         // ------------------------------------------------------------
@@ -230,7 +230,7 @@ class PTP_Stack: public cModuleInitBase, public IClockEventSink
         // Getters
         // ------------------------------------------------------------
         int     GetModuleID();
-
+        int     GetRedundantVotingMode();
         // ------------------------------------------------------------
         // API functions for services
         // ------------------------------------------------------------

@@ -762,6 +762,7 @@ PTP_MAC::ParseResourceParameters()
 {
     PTP_Enable          = par( "PTP_Enable" ).boolValue();
     ClockPath           = par("ClockPath").stringValue();
+
     PTP_NIC_CtrlPath    = par("PTP_NIC_CtrlPath").stringValue();
 }
 
@@ -770,7 +771,11 @@ PTP_MAC::AllocateResources()
 {
     if( PTP_Enable )
     {
-        pClock      = check_and_cast<cScheduleClock *>(getModuleByPath( ClockPath.c_str() ));
+        try{
+            pClock      = check_and_cast<cScheduleClock *>(getModuleByPath( ClockPath.c_str() ));
+        } catch(...) {
+            error("Could not cast ClockPath = %s", ClockPath.c_str());
+        }
         pNIC_Ctrl   = check_and_cast<PTP_NIC_Ctrl *>(getModuleByPath( PTP_NIC_CtrlPath.c_str() ));
     }
 }

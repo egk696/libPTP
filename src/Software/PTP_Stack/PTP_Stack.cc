@@ -123,6 +123,7 @@ PTP_Stack::ParseStackParameters()
     // -------------------------------------------------------------------------
     // Parse parameters for default data set
     // -------------------------------------------------------------------------
+    RedundantVoting         = par("RedundantVoting").boolValue();
     SlaveOnly               = par( "SlaveOnly" ).boolValue();
     TwoStepFlag             = par( "PTP_TwoStepFlag" ).boolValue();
     Priority1               = par( "Priority1" ).longValue();
@@ -1047,4 +1048,10 @@ int
 PTP_Stack::GetModuleID()
 {
     return ModuleID;
+}
+
+int
+PTP_Stack::GetRedundantVotingMode()
+{
+    return RedundantVoting;
 }

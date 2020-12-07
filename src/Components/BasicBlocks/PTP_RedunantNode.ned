@@ -30,21 +30,13 @@ package libptp.Components.BasicBlocks;
 // Imports
 // ======================================================
 
-import libptp.Software.PTP_Stack.*;
+import libptp.Firmware.EthernetII_LLC.EthernetII_LLC;
+import libptp.Hardware.HwClock.ScheduleClock.IScheduleClock;
+import libptp.Hardware.PTP_ClocklessNIC;
 import libptp.Software.ClockServo.IClockServo;
-import libptp.Software.ClockServo.*;
-import libptp.Software.PTP_EthernetMapping.*;
+import libptp.Software.PTP_EthernetMapping.PTP_EthernetMapping;
+import libptp.Software.PTP_Stack.PTP_Stack;
 
-import libptp.Firmware.*.*;
-import libptp.Hardware.*;
-
-// ======================================================
-// Channel declarations
-// ======================================================
-
-// ======================================================
-// Network declarations
-// ======================================================
 
 module PTP_RedundantNode like IPTP_Redundant_EtherNode
 {
@@ -56,6 +48,7 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
         bool PTP_TwoStepFlag = default(false);
         string PTP_DelayMechanism = default("DELAY_MECH_E2E");
 
+        string ClockType = default("PerfectScheduleClock");
         string ClockServoType = default("PI_ClockServo");
 
     gates:
@@ -64,17 +57,27 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
 
     submodules:
 
+        Clock: <ClockType> like IScheduleClock {
+            parameters:
+                @display("p=60,171");
+        }
+
+        ClockServo: <ClockServoType> like IClockServo {
+            parameters:
+                @display("p=60,52");
+        }
+
         PTP_Stack[sizeof(ethg)]: PTP_Stack {
             parameters:
 
                 @display("p=200,52");
-
+                RedundantVoting = default(true);
                 PTP_ClockType = PTP_ClockType;
                 PTP_TwoStepFlag = PTP_TwoStepFlag;
                 PTP_DelayMechanism = PTP_DelayMechanism;
                 UseMacForClockID = default(true);
 
-                ClockPath = default("^.NIC.Clock");
+                ClockPath = default("^.Clock");
 
             gates:
                 PtpIn[1];
@@ -83,55 +86,51 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
                 PortRequest[1];
         }
 
-        ClockServo: <ClockServoType> like IClockServo {
-            parameters:
-                @display("p=60,52");
-        }
-
-        PTP_EthMap: PTP_EthernetMapping {
+        PTP_EthMap[sizeof(ethg)]: PTP_EthernetMapping {
             parameters:
                 @display("p=259,171");
 
             gates:
-                upperLayerIn[sizeof(ethg)];
-                upperLayerOut[sizeof(ethg)];
+                upperLayerIn[1];
+                upperLayerOut[1];
         }
 
-        LLC: EthernetII_LLC {
+        LLC[sizeof(ethg)]: EthernetII_LLC {
             parameters:
                 @display("p=259,292");
 
                 EtherTypeMapping = default("35063:0");
         }
 
-        NIC: PTP_NIC {
+        NIC_Clockless[sizeof(ethg)]: PTP_ClocklessNIC {
             parameters:
                 @display("p=200,406");
 
+                ClockPath = default("^.^.Clock");
                 PTP_ClockType = PTP_ClockType;
-                PTP_DelayMechanism = PTP_DelayMechanism;
                 PTP_TwoStepFlag = PTP_TwoStepFlag;
 
+                PTP_DelayMechanism = PTP_DelayMechanism;
             gates:
-                ethg[sizeof(ethg)];
-                PortConfig[sizeof(ethg)];
-                PortRequest[sizeof(ethg)];
+                ethg[1];
+                PortConfig[1];
+                PortRequest[1];
         }
 
     connections allowunconnected:
-		
-		PTP_EthMap.lowerLayerOut --> LLC.upperLayerIn++;
-        PTP_EthMap.lowerLayerIn  <-- LLC.upperLayerOut++;
 
-        LLC.lowerLayerOut --> NIC.upperLayerIn;
-        LLC.lowerLayerIn <-- NIC.upperLayerOut;
-		
         for i=0..sizeof(ethg)-1 {
-            PTP_Stack[i].PtpOut[0] --> PTP_EthMap.upperLayerIn[i];
-            PTP_Stack[i].PtpIn[0] <-- PTP_EthMap.upperLayerOut[i];
+            PTP_EthMap[i].lowerLayerOut --> LLC[i].upperLayerIn++;
+            PTP_EthMap[i].lowerLayerIn <-- LLC[i].upperLayerOut++;
 
-            NIC.PortConfig[i] <-- PTP_Stack[i].PortConfig[0];
-            NIC.PortRequest[i] --> PTP_Stack[i].PortRequest[0];
-            NIC.ethg[i] <--> ethg[i];
+            LLC[i].lowerLayerOut --> NIC_Clockless[i].upperLayerIn;
+            LLC[i].lowerLayerIn <-- NIC_Clockless[i].upperLayerOut;
+
+            PTP_Stack[i].PtpOut[0] --> PTP_EthMap[i].upperLayerIn[0];
+            PTP_Stack[i].PtpIn[0] <-- PTP_EthMap[i].upperLayerOut[0];
+
+            NIC_Clockless[i].PortConfig[0] <-- PTP_Stack[i].PortConfig[0];
+            NIC_Clockless[i].PortRequest[0] --> PTP_Stack[i].PortRequest[0];
+            NIC_Clockless[i].ethg[0] <--> ethg[i];
         }
 }
