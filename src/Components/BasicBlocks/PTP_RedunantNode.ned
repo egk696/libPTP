@@ -50,7 +50,7 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
 {
     parameters:
 
-        @display("i=PTP/Nodes/PTP_Nodes/Generic;bgb=788,471");
+        @display("i=PTP/Nodes/PTP_Nodes/Generic;bgb=391,471");
 
         string PTP_ClockType = default("PTP_CLOCK_TYPE_ORDINARY");
         bool PTP_TwoStepFlag = default(false);
@@ -67,13 +67,14 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
         PTP_Stack[sizeof(ethg)]: PTP_Stack {
             parameters:
 
-                @display("p=174,52");
+                @display("p=200,52");
 
                 PTP_ClockType = PTP_ClockType;
                 PTP_TwoStepFlag = PTP_TwoStepFlag;
                 PTP_DelayMechanism = PTP_DelayMechanism;
+                UseMacForClockID = default(true);
 
-                ClockPath = default("^.NIC[$id].Clock");
+                ClockPath = default("^.NIC.Clock");
 
             gates:
                 PtpIn[1];
@@ -87,25 +88,25 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
                 @display("p=60,52");
         }
 
-        PTP_EthMap[sizeof(ethg)]: PTP_EthernetMapping {
+        PTP_EthMap: PTP_EthernetMapping {
             parameters:
-                @display("p=233,171");
+                @display("p=259,171");
 
             gates:
                 upperLayerIn[sizeof(ethg)];
                 upperLayerOut[sizeof(ethg)];
         }
 
-        LLC[sizeof(ethg)]: EthernetII_LLC {
+        LLC: EthernetII_LLC {
             parameters:
-                @display("p=233,292");
+                @display("p=259,292");
 
                 EtherTypeMapping = default("35063:0");
         }
 
-        NIC[sizeof(ethg)]: PTP_NIC {
+        NIC: PTP_NIC {
             parameters:
-                @display("p=174,406");
+                @display("p=200,406");
 
                 PTP_ClockType = PTP_ClockType;
                 PTP_DelayMechanism = PTP_DelayMechanism;
@@ -118,20 +119,19 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
         }
 
     connections allowunconnected:
+		
+		PTP_EthMap.lowerLayerOut --> LLC.upperLayerIn++;
+        PTP_EthMap.lowerLayerIn  <-- LLC.upperLayerOut++;
 
+        LLC.lowerLayerOut --> NIC.upperLayerIn;
+        LLC.lowerLayerIn <-- NIC.upperLayerOut;
+		
         for i=0..sizeof(ethg)-1 {
-            PTP_Stack[i].PtpOut[0] --> PTP_EthMap[i].upperLayerIn[0];
-            PTP_Stack[i].PtpIn[0] <-- PTP_EthMap[i].upperLayerOut[0];
+            PTP_Stack[i].PtpOut[0] --> PTP_EthMap.upperLayerIn[i];
+            PTP_Stack[i].PtpIn[0] <-- PTP_EthMap.upperLayerOut[i];
 
-
-        	PTP_EthMap[i].lowerLayerOut --> LLC[i].upperLayerIn++;
-        	PTP_EthMap[i].lowerLayerIn <-- LLC[i].upperLayerOut++;
-
-        	LLC[i].lowerLayerOut --> NIC[i].upperLayerIn;
-        	LLC[i].lowerLayerIn <-- NIC[i].upperLayerOut;
-
-            NIC[i].PortConfig[0] <-- PTP_Stack[i].PortConfig[0];
-            NIC[i].PortRequest[0] --> PTP_Stack[i].PortRequest[0];
-            NIC[i].ethg[0] <--> ethg[i];
+            NIC.PortConfig[i] <-- PTP_Stack[i].PortConfig[0];
+            NIC.PortRequest[i] --> PTP_Stack[i].PortRequest[0];
+            NIC.ethg[i] <--> ethg[i];
         }
 }

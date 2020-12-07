@@ -29,8 +29,7 @@ package libptp.Components.Nodes.InternalNodes;
 // ======================================================
 // Imports
 // ======================================================
-
-import libptp.Components.BasicBlocks.PTP_BasicNode;
+import libptp.Components.BasicBlocks.PTP_RedundantNode;
 
 
 // ======================================================
@@ -45,7 +44,7 @@ import libptp.Components.BasicBlocks.PTP_BasicNode;
 // Base class for internal nodes
 // ------------------------------------------------------
 
-module PTP_Internal_Node extends PTP_BasicNode
+module PTP_Redundant_Internal_Node extends PTP_RedundantNode
 {
     parameters:
 
@@ -60,43 +59,42 @@ module PTP_Internal_Node extends PTP_BasicNode
 // Slave/Master capabilities
 // ------------------------------------------------------
 
-module PTP_Internal_Node_SO extends PTP_Internal_Node
+module PTP_Redundant_Internal_Node_SO extends PTP_Redundant_Internal_Node
 {
     parameters:
+        PTP_Stack[*].SlaveOnly = true;
 
-        PTP_Stack.SlaveOnly = true;
-
-        PTP_Stack.Priority1 = default(128);
-        PTP_Stack.ClockClass = default("CLOCK_CLASS_SLAVE_ONLY");
-        PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_UNKNOWN");
+        PTP_Stack[*].Priority1 = default(128);
+        PTP_Stack[*].ClockClass = default("CLOCK_CLASS_SLAVE_ONLY");
+        PTP_Stack[*].ClockAccuracy = default("CLOCK_ACCURACY_UNKNOWN");
 }
 
-module PTP_Internal_Node_M3 extends PTP_Internal_Node
+module PTP_Redundant_Internal_Node_M3 extends PTP_Redundant_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly = false;
+        PTP_Stack[*].SlaveOnly = false;
 
-        PTP_Stack.ClockClass = default("CLOCK_CLASS_DEFAULT");
-        PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_1_S");
+        PTP_Stack[*].ClockClass = default("CLOCK_CLASS_DEFAULT");
+        PTP_Stack[*].ClockAccuracy = default("CLOCK_ACCURACY_1_S");
 }
 
-module PTP_Internal_Node_M2 extends PTP_Internal_Node
+module PTP_Redundant_Internal_Node_M2 extends PTP_Redundant_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly = false;
+        PTP_Stack[*].SlaveOnly = false;
 
-        PTP_Stack.ClockClass = default("CLOCK_CLASS_DEFAULT");
-        PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_1_US");
+        PTP_Stack[*].ClockClass = default("CLOCK_CLASS_DEFAULT");
+        PTP_Stack[*].ClockAccuracy = default("CLOCK_ACCURACY_1_US");
 }
 
-module PTP_Internal_Node_M1 extends PTP_Internal_Node
+module PTP_Redundant_Internal_Node_M1 extends PTP_Redundant_Internal_Node
 {
     parameters:
 
-        PTP_Stack.SlaveOnly = false;
+        PTP_Stack[*].SlaveOnly = false;
 
-        PTP_Stack.ClockClass = default("CLOCK_CLASS_PRIMARY");
-        PTP_Stack.ClockAccuracy = default("CLOCK_ACCURACY_25_NS");
+        PTP_Stack[*].ClockClass = default("CLOCK_CLASS_PRIMARY");
+        PTP_Stack[*].ClockAccuracy = default("CLOCK_ACCURACY_25_NS");
 }
