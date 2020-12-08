@@ -479,48 +479,56 @@ SampleDecision_t
 IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
 {
     static simtime_t offsetFromMasters[7];
+    static double ingressFromMasters[7];
     std::vector<double> usableOffsets = std::vector<double>();
-    std::vector<double> filtered = std::vector<double>();
-    double votedOffsetFromMasters = 0.0;
 
     #include <iostream>
-    std::cout << "Inside VotedSample()" << endl;
+    std::cout << "Inside VotedSample(" << domain << ")" << endl;
 
     //Copying usable offsets
     offsetFromMasters[domain] = offsetFromMaster;
+    ingressFromMasters[domain] = Ingress.dbl();
     std::cout << "Offsets:" << endl;
-    for(auto i=0; i<7; i++){
-        std::cout << "[ [" << i << "] =>" << offsetFromMasters[i] << "], ";
-        if(offsetFromMasters[i] != 0)
+    for (unsigned i=0; i<7; i++){
+        std::cout << "[ [" << i << "] =>" << offsetFromMasters[i].dbl() << " at igressTime " << ingressFromMasters[i] << "],";
+        if (ingressFromMasters[i] != 0){
             usableOffsets.push_back(offsetFromMasters[i].dbl());
+        }
     }
     std::cout << endl;
-
-    //Sorting
-    std::sort(usableOffsets.begin(), usableOffsets.end());
-
     std::cout << usableOffsets.size()<< " usable offset(s)" << endl;
+
+    double votedOffsetFromMasters = this->VotingFTA(usableOffsets);
+    double avgIngressFromMasters = (double) std::accumulate(ingressFromMasters, ingressFromMasters+usableOffsets.size(), 0.0) / usableOffsets.size();
+
+    std::cout << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
+
+    return this->Sample(SimTime(votedOffsetFromMasters), avgIngressFromMasters);
+}
+
+double IClockServo::VotingFTA(std::vector<double> usableOffsets) {
+    double votedOffsetFromMasters = 0.0;
+    // Sorting
+    std::sort(usableOffsets.begin(), usableOffsets.end());
     // Actual FTA
-    if(usableOffsets.size() == 1)
+    if (usableOffsets.size() == 1)
     {
         votedOffsetFromMasters = usableOffsets[0];
     }
-    else if(usableOffsets.size() == 2)
+    else if (usableOffsets.size() == 2)
     {
         votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
     }
-    else if(usableOffsets.size() >= 3)
+    else if (usableOffsets.size() >= 3)
     {
         usableOffsets.erase(usableOffsets.begin());
         usableOffsets.pop_back();
         auto n = usableOffsets.size();
         // check for even case
+        // TODO: EVEN CASE HAS A BUG WE HAVE TO FIX
         if (n % 2 != 0)
-            votedOffsetFromMasters = (double)usableOffsets[n / 2];
+            votedOffsetFromMasters = (double) usableOffsets[n / 2];
         else
-            votedOffsetFromMasters = (double)(usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
+            votedOffsetFromMasters = (double) (usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
     }
-    std::cout << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
-
-    return this->Sample(SimTime(votedOffsetFromMasters), Ingress);
 }

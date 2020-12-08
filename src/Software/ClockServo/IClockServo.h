@@ -74,6 +74,7 @@ class IClockServo: public cModuleInitBase
 
         // Internal functions
         void    CalcMaxFrequEstCnt();
+        double  VotingFTA(std::vector<double> usableOffsets);
 
     protected:
 
