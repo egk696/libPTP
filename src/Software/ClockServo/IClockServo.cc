@@ -119,6 +119,10 @@ IClockServo::ParseParameters()
     MaxFrequEstInterval     = par( "MaxFrequEstInterval" ).doubleValue();
     OffsetThreshForReset    = par( "OffsetThreshForReset" ).doubleValue();
     EnableDebugOutput       = par( "EnableDebugOutput" ).boolValue();
+    if (strcmp(par( "VotingFunctionMode").stringValue(), "AVG") == 0)
+        VotingFunctionMode = AVG;
+    else
+        VotingFunctionMode = FTA;
 }
 
 void
@@ -478,30 +482,40 @@ IClockServo::Sample( simtime_t offsetFromMaster, simtime_t Ingress )
 SampleDecision_t
 IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
 {
+    double votedOffsetFromMasters = 0.0;
     static simtime_t offsetFromMasters[7];
     static double ingressFromMasters[7];
     std::vector<double> usableOffsets = std::vector<double>();
 
-    #include <iostream>
-    std::cout << "Inside VotedSample(" << domain << ")" << endl;
-
     //Copying usable offsets
     offsetFromMasters[domain] = offsetFromMaster;
     ingressFromMasters[domain] = Ingress.dbl();
-    std::cout << "Offsets:" << endl;
     for (unsigned i=0; i<7; i++){
-        std::cout << "[ [" << i << "] =>" << offsetFromMasters[i].dbl() << " at igressTime " << ingressFromMasters[i] << "],";
         if (ingressFromMasters[i] != 0){
             usableOffsets.push_back(offsetFromMasters[i].dbl());
         }
     }
-    std::cout << endl;
-    std::cout << usableOffsets.size()<< " usable offset(s)" << endl;
 
-    double votedOffsetFromMasters = this->VotingFTA(usableOffsets);
+    switch(VotingFunctionMode){
+    case FTA:
+        votedOffsetFromMasters = this->VotingFTA(usableOffsets);
+        break;
+    case AVG:
+        votedOffsetFromMasters = this->VotingAVG(usableOffsets);
+        break;
+    }
     double avgIngressFromMasters = (double) std::accumulate(ingressFromMasters, ingressFromMasters+usableOffsets.size(), 0.0) / usableOffsets.size();
 
-    std::cout << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
+    if( EnableDebugOutput )
+    {
+        EV << "Inside VotedSample(" << domain << ")" << endl;
+        EV << "Offsets:" << endl;
+        for (unsigned i=0; i<7; i++)
+            EV << "[ [" << i << "] =>" << offsetFromMasters[i].dbl() << " at igressTime " << ingressFromMasters[i] << "],";
+        EV << endl;
+        EV << usableOffsets.size()<< " usable offset(s)" << endl;
+        EV << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
+    }
 
     return this->Sample(SimTime(votedOffsetFromMasters), avgIngressFromMasters);
 }
@@ -531,5 +545,13 @@ double IClockServo::VotingFTA(std::vector<double> usableOffsets) {
         else
             votedOffsetFromMasters = (double) (usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
     }
+    return votedOffsetFromMasters;
+}
+
+double IClockServo::VotingAVG(std::vector<double> usableOffsets) {
+    double votedOffsetFromMasters = 0.0;
+    // Averaging
+    std::sort(usableOffsets.begin(), usableOffsets.end());
+    votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
     return votedOffsetFromMasters;
 }

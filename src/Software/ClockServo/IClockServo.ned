@@ -34,7 +34,7 @@ moduleinterface IClockServo
         int         FrequEstShift;
         double      MaxFrequEstInterval @unit(s);
         double      OffsetThreshForReset @unit(s);
-
+		string 		VotingFunctionMode;
         // Debug
         bool        EnableDebugOutput;
 }

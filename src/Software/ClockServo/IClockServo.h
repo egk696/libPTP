@@ -70,11 +70,18 @@ class IClockServo: public cModuleInitBase
             SCALE           = 40,
         };
 
+        typedef enum
+        {
+            FTA = 0,
+            AVG = 1
+        } voting_t;
+
     private:
 
         // Internal functions
         void    CalcMaxFrequEstCnt();
         double  VotingFTA(std::vector<double> usableOffsets);
+        double  VotingAVG(std::vector<double> usableOffsets);
 
     protected:
 
@@ -89,6 +96,7 @@ class IClockServo: public cModuleInitBase
         bool            EnableSynchronize;
         simtime_t       MaxFrequEstInterval;
         simtime_t       OffsetThreshForReset;
+        voting_t        VotingFunctionMode;
 
         // Debug config
         bool            EnableDebugOutput;
