@@ -531,4 +531,5 @@ double IClockServo::VotingFTA(std::vector<double> usableOffsets) {
         else
             votedOffsetFromMasters = (double) (usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
     }
+    return votedOffsetFromMasters;
 }
