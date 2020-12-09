@@ -50,6 +50,7 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
 
         string ClockType = default("PerfectScheduleClock");
         string ClockServoType = default("PI_ClockServo");
+        string ClockServoVoting = default("FTA");
 
     gates:
 
@@ -65,6 +66,7 @@ module PTP_RedundantNode like IPTP_Redundant_EtherNode
         ClockServo: <ClockServoType> like IClockServo {
             parameters:
                 @display("p=60,52");
+                VotingFunctionMode = ClockServoVoting;
         }
 
         PTP_Stack[sizeof(ethg)]: PTP_Stack {

@@ -569,6 +569,6 @@ double IClockServo::VotingAVG(std::vector<double> usableOffsets) {
     double votedOffsetFromMasters = 0.0;
     // Averaging
     std::sort(usableOffsets.begin(), usableOffsets.end());
-    votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
+    votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / usableOffsets.size();
     return votedOffsetFromMasters;
 }
