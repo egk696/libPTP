@@ -475,31 +475,44 @@ IClockServo::Sample( simtime_t offsetFromMaster, simtime_t Ingress )
     return SampleDec;
 }
 
+/** A simple struct representing (offset, ingress) tuples **/
+typedef struct OffsetStruct
+{
+    simtime_t offset;
+    simtime_t ingress;
+} OffsetStruct;
+
 SampleDecision_t
 IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
 {
-    static simtime_t offsetFromMasters[7];
-    static double ingressFromMasters[7];
+    const simtime_t MAX_INGRESS_DIFF = 1; //Setting it to 1 cause why not, feel free to change if necessary
+
+    static OffsetStruct offsetFromMasters[7];
     std::vector<double> usableOffsets = std::vector<double>();
 
     #include <iostream>
     std::cout << "Inside VotedSample(" << domain << ")" << endl;
 
     //Copying usable offsets
-    offsetFromMasters[domain] = offsetFromMaster;
-    ingressFromMasters[domain] = Ingress.dbl();
+    offsetFromMasters[domain] = {offsetFromMaster, Ingress};
+    #include <stdlib.h>
     std::cout << "Offsets:" << endl;
-    for (unsigned i=0; i<7; i++){
-        std::cout << "[ [" << i << "] =>" << offsetFromMasters[i].dbl() << " at igressTime " << ingressFromMasters[i] << "],";
-        if (ingressFromMasters[i] != 0){
-            usableOffsets.push_back(offsetFromMasters[i].dbl());
+
+    double avgIngressFromMasters = 0;
+    for(auto i=0; i<7; i++){
+        std::cout << "[ [" << i << "] => (" << offsetFromMasters[i].offset << ", " << offsetFromMasters[i].ingress << ")], ";
+        auto delta = Ingress - offsetFromMasters[i].ingress;
+        if(offsetFromMasters[i].ingress != 0 && abs(delta.dbl()) < MAX_INGRESS_DIFF.dbl()) {
+            usableOffsets.push_back(offsetFromMasters[i].offset.dbl());
+            avgIngressFromMasters += offsetFromMasters[i].ingress.dbl();
         }
     }
+    avgIngressFromMasters /= usableOffsets.size();
+
     std::cout << endl;
     std::cout << usableOffsets.size()<< " usable offset(s)" << endl;
 
     double votedOffsetFromMasters = this->VotingFTA(usableOffsets);
-    double avgIngressFromMasters = (double) std::accumulate(ingressFromMasters, ingressFromMasters+usableOffsets.size(), 0.0) / usableOffsets.size();
 
     std::cout << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
 
