@@ -119,10 +119,10 @@ IClockServo::ParseParameters()
     MaxFrequEstInterval     = par( "MaxFrequEstInterval" ).doubleValue();
     OffsetThreshForReset    = par( "OffsetThreshForReset" ).doubleValue();
     EnableDebugOutput       = par( "EnableDebugOutput" ).boolValue();
-    if (strcmp(par( "VotingFunctionMode").stringValue(), "AVG") == 0)
-        VotingFunctionMode = AVG;
+    if (strcmp(par( "AggregationFunction").stringValue(), "AVG") == 0)
+        AggregationFunction = IClockServo::Aggregation::AVG;
     else
-        VotingFunctionMode = FTA;
+        AggregationFunction = IClockServo::Aggregation::FTA;
 }
 
 void
@@ -479,19 +479,11 @@ IClockServo::Sample( simtime_t offsetFromMaster, simtime_t Ingress )
     return SampleDec;
 }
 
-/** A simple struct representing (offset, ingress) tuples **/
-typedef struct OffsetStruct
-{
-    simtime_t offset;
-    simtime_t ingress;
-} OffsetStruct;
-
 SampleDecision_t
 IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
 {
     const simtime_t MAX_INGRESS_DIFF = 1; //Setting it to 1 cause why not, feel free to change if necessary
-
-    static OffsetStruct offsetFromMasters[7];
+//    static OffsetStruct offsetFromMasters[7];
     double votedOffsetFromMasters = 0.0;
     std::vector<double> usableOffsets = std::vector<double>();
 
@@ -514,12 +506,12 @@ IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainN
     std::cout << endl;
     std::cout << usableOffsets.size()<< "usable offset(s)" << endl;
 
-    switch(VotingFunctionMode){
-    case FTA:
-        votedOffsetFromMasters = this->VotingFTA(usableOffsets);
+    switch(AggregationFunction){
+    case IClockServo::Aggregation::AVG:
+        votedOffsetFromMasters = this->aggregateAVG(usableOffsets);
         break;
-    case AVG:
-        votedOffsetFromMasters = this->VotingAVG(usableOffsets);
+    case IClockServo::Aggregation::FTA:
+        votedOffsetFromMasters = this->aggregateFTA(usableOffsets);
         break;
     }
 
@@ -534,10 +526,10 @@ IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainN
         EV << "votedOffsetFromMasters: " << votedOffsetFromMasters << endl;
     }
 
-    return this->Sample(SimTime(votedOffsetFromMasters), avgIngressFromMasters);
+    return this->Sample(SimTime(votedOffsetFromMasters), Ingress);
 }
 
-double IClockServo::VotingFTA(std::vector<double> usableOffsets) {
+double IClockServo::aggregateFTA(std::vector<double> usableOffsets) {
     double votedOffsetFromMasters = 0.0;
     // Sorting
     std::sort(usableOffsets.begin(), usableOffsets.end());
@@ -556,7 +548,6 @@ double IClockServo::VotingFTA(std::vector<double> usableOffsets) {
         usableOffsets.pop_back();
         auto n = usableOffsets.size();
         // check for even case
-        // TODO: EVEN CASE HAS A BUG WE HAVE TO FIX
         if (n % 2 != 0)
             votedOffsetFromMasters = (double) usableOffsets[n / 2];
         else
@@ -565,7 +556,7 @@ double IClockServo::VotingFTA(std::vector<double> usableOffsets) {
     return votedOffsetFromMasters;
 }
 
-double IClockServo::VotingAVG(std::vector<double> usableOffsets) {
+double IClockServo::aggregateAVG(std::vector<double> usableOffsets) {
     double votedOffsetFromMasters = 0.0;
     // Averaging
     std::sort(usableOffsets.begin(), usableOffsets.end());

@@ -35,7 +35,7 @@ simple Internal_ClockServo like IClockServo
         int         FrequEstShift                   = default( 4     );
         double      MaxFrequEstInterval @unit(s)    = default( 10s   );
         double      OffsetThreshForReset @unit(s)   = default( 100us );
-        string		VotingFunctionMode				= default( "FTA" );
+        string		AggregationFunction				= default( "FTA" );
 
         // Debug
         bool        EnableDebugOutput               = default( false );

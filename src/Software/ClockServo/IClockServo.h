@@ -50,6 +50,13 @@ struct SampleDecision_t
     int64_t     ScaleFactor_ppb;
 };
 
+/** A simple struct representing (offset, ingress) tuples **/
+typedef struct OffsetStruct
+{
+    simtime_t offset;
+    simtime_t ingress;
+} OffsetStruct;
+
 // ======================================================
 // Declarations
 // ======================================================
@@ -70,18 +77,17 @@ class IClockServo: public cModuleInitBase
             SCALE           = 40,
         };
 
-        typedef enum
-        {
+        enum class Aggregation {
             FTA = 0,
             AVG = 1
-        } voting_t;
+        };
 
     private:
 
         // Internal functions
         void    CalcMaxFrequEstCnt();
-        double  VotingFTA(std::vector<double> usableOffsets);
-        double  VotingAVG(std::vector<double> usableOffsets);
+        double  aggregateFTA(std::vector<double> usableOffsets);
+        double  aggregateAVG(std::vector<double> usableOffsets);
 
     protected:
 
@@ -96,7 +102,7 @@ class IClockServo: public cModuleInitBase
         bool            EnableSynchronize;
         simtime_t       MaxFrequEstInterval;
         simtime_t       OffsetThreshForReset;
-        voting_t        VotingFunctionMode;
+        Aggregation     AggregationFunction;
 
         // Debug config
         bool            EnableDebugOutput;
@@ -119,6 +125,9 @@ class IClockServo: public cModuleInitBase
         simsignal_t     Decision_JumpDelta_SigId;
         simsignal_t     Decision_EnableScale_SigId;
         simsignal_t     Decision_ScaleFactor_ppb_SigId;
+
+        // Multi-domain
+        OffsetStruct offsetFromMasters[7];
 
         // API for sub-classes
         virtual void    SetServoState( ClockServoState NewServoState );
