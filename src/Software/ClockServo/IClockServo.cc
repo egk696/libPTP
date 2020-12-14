@@ -540,18 +540,13 @@ double IClockServo::aggregateFTA(std::vector<double> usableOffsets) {
     }
     else if (usableOffsets.size() == 2)
     {
-        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2;
+        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2.0;
     }
     else if (usableOffsets.size() >= 3)
     {
         usableOffsets.erase(usableOffsets.begin());
         usableOffsets.pop_back();
-        auto n = usableOffsets.size();
-        // check for even case
-        if (n % 2 != 0)
-            votedOffsetFromMasters = (double) usableOffsets[n / 2];
-        else
-            votedOffsetFromMasters = (double) (usableOffsets[(n - 1) / 2] + usableOffsets[n / 2]) / 2.0;
+        votedOffsetFromMasters = std::accumulate(usableOffsets.begin(), usableOffsets.end(), 0.0) / usableOffsets.size();
     }
     return votedOffsetFromMasters;
 }
