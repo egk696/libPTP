@@ -127,7 +127,9 @@ class IClockServo: public cModuleInitBase
         simsignal_t     Decision_ScaleFactor_ppb_SigId;
 
         // Multi-domain
-        OffsetStruct offsetFromMasters[7];
+        OffsetStruct    offsetFromMasters[7];
+        unsigned        stableCycles;
+        bool            coldStartFinished;
 
         // API for sub-classes
         virtual void    SetServoState( ClockServoState NewServoState );

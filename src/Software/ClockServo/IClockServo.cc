@@ -47,6 +47,10 @@
 // Definitions
 // ======================================================
 
+#define MAX_INGRESS_DIFF    1 //Setting it to 1 cause why not, feel free to change if necessary
+#define STABLE_SYNC_THRES   0.000001
+#define COLD_SYNC_THRES     100
+
 // ------------------------------------------------------
 // Stream operators
 // ------------------------------------------------------
@@ -189,7 +193,8 @@ IClockServo::IClockServo()
     OffsetThreshForReset        = SIMTIME_ZERO;
     SyncInterval                = SIMTIME_ZERO;
     ServoState                  = ClockServoState::DISABLED;
-
+    coldStartFinished           = false;
+    stableCycles                = 0;
     Reset();
 }
 
@@ -216,6 +221,9 @@ IClockServo::Reset()
     SampleDec.Delta             = SIMTIME_ZERO;
     SampleDec.EnableScale       = false;
     SampleDec.ScaleFactor_ppb   = 0;
+
+    coldStartFinished           = false;
+    stableCycles                = 0;
 }
 
 void
@@ -482,21 +490,21 @@ IClockServo::Sample( simtime_t offsetFromMaster, simtime_t Ingress )
 SampleDecision_t
 IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainNumber_t domain)
 {
-    const simtime_t MAX_INGRESS_DIFF = 1; //Setting it to 1 cause why not, feel free to change if necessary
-//    static OffsetStruct offsetFromMasters[7];
     double votedOffsetFromMasters = 0.0;
     std::vector<double> usableOffsets = std::vector<double>();
 
     //Copying usable offsets
     offsetFromMasters[domain] = {offsetFromMaster, Ingress};
     #include <stdlib.h>
-    std::cout << "Offsets:" << endl;
+    std::cout << "--------------------------------------------------------------------------------------------------------------------------" << endl;
+    std::cout << "OffsetFromMasters (id="<< this->mod_id << ")" << endl;
+    std::cout << "[domain] => (offset, ingress, delta): " << endl;
 
-    double avgIngressFromMasters = 0;
+    double avgIngressFromMasters = SIMTIME_ZERO.dbl();
     for(auto i=0; i<7; i++){
-        std::cout << "[ [" << i << "] => (" << offsetFromMasters[i].offset << ", " << offsetFromMasters[i].ingress << ")], ";
-        auto delta = Ingress - offsetFromMasters[i].ingress;
-        if(offsetFromMasters[i].ingress != 0 && abs(delta.dbl()) < MAX_INGRESS_DIFF.dbl()) {
+        auto delta = (Ingress - offsetFromMasters[i].ingress);
+        std::cout << "[" << i << "] => (" << offsetFromMasters[i].offset << ", " << offsetFromMasters[i].ingress << ", " << delta << "), ";
+        if(offsetFromMasters[i].ingress != 0 && fabs(delta.dbl()) < MAX_INGRESS_DIFF) {
             usableOffsets.push_back(offsetFromMasters[i].offset.dbl());
             avgIngressFromMasters += offsetFromMasters[i].ingress.dbl();
         }
@@ -504,15 +512,37 @@ IClockServo::VotedSample( simtime_t offsetFromMaster, simtime_t Ingress, domainN
     avgIngressFromMasters /= usableOffsets.size();
 
     std::cout << endl;
-    std::cout << usableOffsets.size()<< "usable offset(s)" << endl;
+    std::cout << usableOffsets.size()<< " usable offset(s)" << endl;
+    std::cout << "Cold Start Finished is: " << coldStartFinished << "(stable = " << stableCycles << ")" << endl;
 
-    switch(AggregationFunction){
-    case IClockServo::Aggregation::AVG:
-        votedOffsetFromMasters = this->aggregateAVG(usableOffsets);
-        break;
-    case IClockServo::Aggregation::FTA:
-        votedOffsetFromMasters = this->aggregateFTA(usableOffsets);
-        break;
+    if(usableOffsets.size() > 0){
+        if(!coldStartFinished){
+            votedOffsetFromMasters = *std::min_element(usableOffsets.begin(), usableOffsets.end());
+        } else {
+            switch(AggregationFunction){
+            case IClockServo::Aggregation::AVG:
+                votedOffsetFromMasters = this->aggregateAVG(usableOffsets);
+                break;
+            case IClockServo::Aggregation::FTA:
+                votedOffsetFromMasters = this->aggregateFTA(usableOffsets);
+                break;
+            }
+        }
+    }
+
+    std::cout << "Aggregated_Offset=" << votedOffsetFromMasters << "sec" << endl;
+
+    if(domain == DOMAIN_DEFAULT){
+        if(!coldStartFinished){
+            if(votedOffsetFromMasters <= STABLE_SYNC_THRES){
+                stableCycles += 1;
+            } else {
+                stableCycles -=1;
+            }
+            if(stableCycles > COLD_SYNC_THRES){
+                coldStartFinished = true;
+            }
+        }
     }
 
     if( EnableDebugOutput )
@@ -540,7 +570,7 @@ double IClockServo::aggregateFTA(std::vector<double> usableOffsets) {
     }
     else if (usableOffsets.size() == 2)
     {
-        votedOffsetFromMasters = std::accumulate( usableOffsets.begin(), usableOffsets.end(), 0.0) / 2.0;
+        votedOffsetFromMasters = std::accumulate(usableOffsets.begin(), usableOffsets.end(), 0.0) / 2.0;
     }
     else if (usableOffsets.size() >= 3)
     {
